@@ -1,0 +1,230 @@
+import pandas as pd
+from itertools import combinations
+
+data = pd.read_csv('movie_bd_v5.csv')
+
+answers = {}
+data['profit']=data.revenue-data.budget
+
+#1. У какого фильма из списка самый большой бюджет?
+answers['1']='5. Pirates of the Caribbean: On Stranger Tides (tt1298650)'
+data[data.budget==data.budget.max()]
+
+#2. Какой из фильмов самый длительный (в минутах)?
+answers['2']='2. Gods and Generals (tt0279111)'
+data[data.runtime==data.runtime.max()]
+
+#3. Какой из фильмов самый короткий (в минутах)?
+answers['3']='3. Winnie the Pooh (tt1449283)'
+data[data.runtime==data.runtime.min()]
+
+#4. Какова средняя длительность фильмов?
+answers['4']='2. 109.6585494970884'
+data.runtime.mean()
+
+#5. Каково медианное значение длительности фильмов?
+answers['5']='1. 107'
+data.runtime.median()
+
+#6. Какой самый прибыльный фильм?
+answers['6']='5. Avatar (tt0499549)'
+data[data.profit==data.profit.max()]
+
+#7. Какой фильм самый убыточный?
+answers['7']='5. The Lone Ranger (tt1210819)'
+data[data.profit==data.profit.min()]
+
+#8. У скольких фильмов из датасета объем сборов оказался выше бюджета?
+answers['8']='1. 1478'
+data[data.revenue>data.budget].count()
+
+#9. Какой фильм оказался самым кассовым в 2008 году?
+answers['9']='The Dark Knight (tt0468569)'
+data[data.revenue==data[data.release_year==2008].revenue.max()]
+
+#10. Самый убыточный фильм за период с 2012 по 2014 г. (включительно)?
+answers['10']='The Lone Ranger (tt1210819)'
+data12_14=data.query('release_year in ["2012","2013","2014"]')
+data12_14[data12_14.profit==data12_14.profit.min()]
+
+#11. Какого жанра фильмов больше всего?
+answers['11']='2. Drama'
+data11=data["genres"].str.split('|')
+genre_list=[]
+genres_count={}
+count=0
+for n in data11:
+    for l in n:
+        genre_list.append(l)
+        count+=1
+​
+for genre in genre_list:
+    genres_count[genre]=genre_list.count(genre)
+​
+max_genres=max(genres_count,key=lambda k:genres_count[k]) 
+print(max_genres)
+​
+#12. Фильмы какого жанра чаще всего становятся прибыльными?
+answers['12']='1. Drama'
+data2=data.loc[data.profit>0]
+data12=data2["genres"].str.split('|')
+genre_list=[]
+genres_count={}
+count=0
+for n in data12:
+    for l in n:
+        genre_list.append(l)
+        count+=1
+        
+for genre in genre_list:
+    genres_count[genre]=genre_list.count(genre)
+​
+max_genres=max(genres_count,key=lambda k:genres_count[k]) 
+print(max_genres)
+
+#13. У какого режиссера самые большие суммарные кассовые сбооры?
+answers['13']='5. Peter Jackson'
+grouped_director=data.groupby(['director'])['revenue'].sum().sort_values(ascending=False)
+print(grouped_director.head(1))
+
+#14. Какой режисер снял больше всего фильмов в стиле Action?
+answers['14']='3. Robert Rodriguez'
+data_Action=data[data.genres.str.contains('Action')]
+directors=data_Action['director'].str.split('|')
+director_list=[]
+director_count={}
+count=0
+for n in directors:
+    for l in n:
+        director_list.append(l)
+        count+=1
+
+for director in director_list:
+    director_count[director]=director_list.count(director)
+​
+max_action=max(director_count,key=lambda k:director_count[k]) 
+print(max_action)
+
+#15. Фильмы с каким актером принесли самые высокие кассовые сборы в 2012 году?
+answers['15']='3. Chris Hemsworth'
+data15=data[data.release_year==2012][['cast', 'revenue']]
+data15.cast=data15.cast.apply(lambda s:s.split('|'))
+data15_exploded=data15.explode('cast')
+data15_exploded.groupby(by='cast').revenue.sum().sort_values(ascending=False)
+
+#16. Какой актер снялся в большем количестве высокобюджетных фильмов?
+answers['16']='3. Matt Damon'
+data16=data[data.budget>data.budget.mean()]
+actors=data16['cast'].str.split('|')
+actor_list=[]
+actor_count={}
+count=0
+for n in actors:
+    for l in n:
+        actor_list.append(l)
+        count+=1
+
+for actor in actor_list:
+    actor_count[actor]=actor_list.count(actor)
+​
+max_budget=max(actor_count,key=lambda k:actor_count[k]) 
+print(max_budget)
+
+#17. В фильмах какого жанра больше всего снимался Nicolas Cage?
+answers['17']='2. Action'
+data_NC=data[data.cast.str.contains('Nicolas Cage')]
+genres=data_NC['genres'].str.split('|')
+genre_list=[]
+genres_count={}
+count=0
+for n in genres:
+    for l in n:
+        genre_list.append(l)
+        count+=1
+        
+for genre in genre_list:
+    genres_count[genre]=genre_list.count(genre)
+    
+max_NC=max(genres_count,key=lambda k:genres_count[k]) 
+print(max_NC)
+
+#18. Самый убыточный фильм от Paramount Pictures
+answers['18']='1. K-19: The Widowmaker (tt0267626)'
+data_PP=data[data.production_companies.str.contains('Paramount Pictures')]
+data_PP[data_PP.profit==data_PP.profit.min()]
+
+#19. Какой год стал самым успешным по суммарным кассовым сборам?
+answers['19']='5. 2015'
+grouped_year=data.groupby(['release_year'])['revenue'].sum().sort_values(ascending=False)
+print(grouped_year.head(1))
+
+#20. Какой самый прибыльный год для студии Warner Bros?
+answers['20']='1. 2014'
+data_WBr=data[data.production_companies.str.contains('Warner Bros')]
+grouped_WBr_year=data_WBr.groupby(['release_year'])['revenue'].sum().sort_values(ascending=False)
+print(grouped_WBr_year.head(1))
+
+#21. В каком месяце за все годы суммарно вышло больше всего фильмов?
+answers['21']='4. Сентябрь'
+release=data['release_date'].str.split('/',expand=True)
+release.columns=['month','day','year']
+months=release['month'].value_counts()
+display(months)
+
+#22. Сколько суммарно вышло фильмов летом? (за июнь, июль, август)
+answers['22']='2. 450'
+release=data['release_date'].str.split('/',expand=True)
+release.columns=['month','day','year']
+months=release['month'].value_counts()
+display(months['6']+months['7']+months['8'])
+
+#23. Для какого режиссера зима – самое продуктивное время года?
+answers['23']='5. Peter Jackson'
+data23=pd.concat([data,release],axis=1)
+winter=data23.query('month in ["1","2","12"]')
+directors=winter['director'].str.split('|')
+director_list=[]
+director_count={}
+count=0
+for n in directors:
+    for l in n:
+        director_list.append(l)
+        count+=1
+
+for director in director_list:
+    director_count[director]=director_list.count(director)
+​
+max_winter=max(director_count,key=lambda k:director_count[k]) 
+print(max_winter)
+
+#24. Какая студия дает самые длинные названия своим фильмам по количеству символов?
+answers['24']='5. Four By Two Productions'
+data24=data.copy()
+data24['totalwords']=data['original_title'].map(lambda x:len(x))
+data24['totalwords']=data['original_title'].str.split().str.len()
+data24.sort_values(ascending=False,by='totalwords').head(1)
+data24.iloc[1448][10].split('|')
+
+#25. Описание фильмов какой студии в среднем самые длинные по количеству слов?
+answers['25']='3. Midnight Picture Show'
+data25=data.copy()
+data25['total']=data['overview'].map(lambda x:len(x))
+data25['total']=data['overview'].str.split().str.len()
+data25.sort_values(ascending=False,by='total').head(1)
+data25.iloc[711][10].split('|')
+
+#26. Какие фильмы входят в 1 процент лучших по рейтингу?
+answers['26']='1. Inside Out, The Dark Knight, 12 Years a Slave'
+data[['original_title','vote_average']].sort_values('vote_average',ascending=False).head(int(len(data['vote_average'])*0.01))
+
+#27. Какие актеры чаще всего снимаются в одном фильме вместе?
+answers['27']='5. Daniel Radcliffe & Rupert Grint'
+actor_list=data.cast.str.split('|').tolist()
+combo_list=[]
+for i in actor_list:
+    for j in combinations(i, 2):
+        combo_list.append(' '.join(j))
+
+combo_list=pd.DataFrame(combo_list)
+combo_list.columns=['actor_combinations']
+combo_list.actor_combinations.value_counts().head(10)
